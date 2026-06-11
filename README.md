@@ -5,7 +5,8 @@ A 20-minute build along: use Claude Code to turn an IFC model into a quality rep
 ## What's in here
 
 ```
-building/Duplex.ifc              — buildingSMART standard duplex (2.3 MB)
+building/Duplex.ifc              — buildingSMART residential duplex (2.3 MB) — primary demo
+building/Office_A.ifc            — buildingSMART commercial office (4.0 MB) — second example for skill generalization
 data/unit-prices.csv             — sample €/unit material prices
 data/project-requirements.md     — client brief (hard rules + preferences)
 tasks/00-explore.md              — PM-friendly model overview (start here)
