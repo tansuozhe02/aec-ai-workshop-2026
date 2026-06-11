@@ -1,0 +1,24 @@
+material,unit,unit_price_eur,trade_group,notes
+concrete_c30,m3,180,Structure,Ready-mix delivered Italy 2026
+concrete_c40,m3,210,Structure,
+reinforcement_steel,kg,1.4,Structure,B500B rebar
+structural_steel,kg,2.8,Structure,S355 sections
+masonry_brick,m3,280,Envelope,Clay brick
+masonry_block,m3,140,Envelope,Concrete block
+xps_insulation,m3,210,Envelope,Extruded polystyrene 35 kg/m3
+mineral_wool,m3,95,Envelope,Glass wool batts
+gypsum_board,m2,9,Finishes,12.5 mm standard
+plaster,m2,14,Finishes,3-coat lime plaster
+ceramic_tile,m2,38,Finishes,Standard porcelain
+hardwood_floor,m2,72,Finishes,Engineered oak
+softwood_floor,m2,45,Finishes,Pine T&G
+laminate_floor,m2,28,Finishes,
+carpet,m2,22,Finishes,Commercial loop
+window_double_glazed,m2,420,Openings,uPVC frame double glazing
+window_triple_glazed,m2,580,Openings,Wood-alu triple glazing
+door_interior_wood,unit,260,Openings,Hollow-core 80x210
+door_exterior_security,unit,1450,Openings,Class 3 burglary-resistant
+copper_pipe,m,14,MEP,DN20 plumbing
+pex_pipe,m,4.5,MEP,DN20 hot water
+electrical_cable,m,2.1,MEP,3x2.5 NYM
+hvac_duct_galvanized,m2,42,MEP,Rectangular duct including fittings
