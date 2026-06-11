@@ -48,12 +48,72 @@ MAT_MAP = {
     "Wood - Flooring": "hardwood_floor",   # assumption: engineered oak; see summary
     "Ceramic Tile": "ceramic_tile",
 }
-# materials present in the model but with no price-list equivalent
-UNMAPPED_KNOWN = {
-    "Masonry - Grout", "Metal - Stud Layer", "Wood - Sheathing - plywood",
-    "Wood - Dimensional Lumber", "Misc. Air Layers - Air Space",
-    "Site - Grass", "Roofing - Barrier", "Roofing - EPDM Membrane",
-}
+def resolve_material(name):
+    """Price-book key for a model material name: exact map first, then a
+    keyword guess (handles authoring-tool variants like 'Type-X Plasterboard'),
+    else None. Exact map always wins, so known models stay unchanged."""
+    if not name:
+        return None
+    if name in MAT_MAP:
+        return MAT_MAP[name]
+    n = name.lower()
+    if "ceiling tile" in n or "acoustic" in n:
+        return None                       # suspended ceiling — no price line
+    if "plasterboard" in n or "gypsum" in n or "drywall" in n or "wallboard" in n:
+        return "gypsum_board"             # incl. 'Type-X' fire-rated board
+    if "plaster" in n:
+        return "plaster"
+    if "brick" in n:
+        return "masonry_brick"
+    if "block" in n:
+        return "masonry_block"
+    if "concrete" in n:
+        return "concrete_c30"
+    if "rigid" in n or "xps" in n:
+        return "xps_insulation"
+    if "insulation" in n or "mineral wool" in n:
+        return "mineral_wool"
+    if "ceramic" in n or ("tile" in n and "ceiling" not in n):
+        return "ceramic_tile"
+    if "steel" in n:
+        return "structural_steel"
+    if "laminate" in n and "floor" in n:
+        return "laminate_floor"
+    if ("wood" in n or "timber" in n or "oak" in n) and "floor" in n:
+        return "hardwood_floor"
+    return None
+
+def compute_floor_area(model):
+    """Sum of room (IfcSpace) areas in m², excluding roof spaces. 0 if none found."""
+    total = 0.0
+    for sp in model.by_type("IfcSpace"):
+        label = f"{sp.Name or ''} {getattr(sp, 'LongName', '') or ''}".lower()
+        if "roof" in label:
+            continue
+        area = None
+        for src in (eu.get_psets(sp, qtos_only=True), eu.get_psets(sp)):
+            for d in src.values():
+                for k, v in d.items():
+                    if isinstance(v, (int, float)) and v > 0 and "area" in k.lower():
+                        area = v
+                        break
+                if area:
+                    break
+            if area:
+                break
+        if area:
+            total += area
+    return total
+
+def project_name(model):
+    pr = model.by_type("IfcProject")
+    if pr:
+        p = pr[0]
+        nm = (p.Name or "").strip()
+        if nm and nm.lower() not in ("", "0001", "default", "project"):
+            return nm
+        return (getattr(p, "LongName", None) or nm or None)
+    return None
 
 settings = geom.settings()
 
@@ -100,6 +160,7 @@ def host_wall_is_external(door):
 rows = []          # breakdown rows
 skipped = []       # (guid, type, reason)
 unmapped_seen = {} # material -> count of elements
+used_keys = set()  # price-book keys actually used (for dynamic notes)
 
 def price_row(key):
     return PRICE.get(key)
@@ -111,6 +172,7 @@ def add_line(el, material_name, qty, unit, price_key):
         rows.append([el.GlobalId, el.is_a(), material_name, round(qty, 4), unit or "",
                      0.0, 0.0, "(unpriced)", "missing from price list"])
         return
+    used_keys.add(pr.material)
     line_total = qty * pr.unit_price_eur
     rows.append([el.GlobalId, el.is_a(), material_name, round(qty, 4), pr.unit,
                  pr.unit_price_eur, round(line_total, 2), pr.trade_group, ""])
@@ -128,7 +190,7 @@ def cost_layered_element(el, gm):
     for name, t in ls:
         if not name:
             continue
-        key = MAT_MAP.get(name)
+        key = resolve_material(name)
         pr = price_row(key) if key else None
         if pr is None:
             add_line(el, name, vol * (t / total_t), "m3", None)  # unpriced, qty informational
@@ -143,7 +205,7 @@ def cost_layered_element(el, gm):
 
 def cost_single_material(el, gm, name):
     vol, footprint, side_area = gm
-    key = MAT_MAP.get(name)
+    key = resolve_material(name)
     pr = price_row(key) if key else None
     if pr is None:
         add_line(el, name, vol, "m3", None)
@@ -156,17 +218,24 @@ def cost_single_material(el, gm, name):
         add_line(el, name, vol * STEEL_DENSITY, "kg", key)
 
 # ---- doors ----
+n_ext_doors = n_int_doors = 0
 for d in m.by_type("IfcDoor"):
     ext = host_wall_is_external(d)
+    if ext:
+        n_ext_doors += 1
+    else:
+        n_int_doors += 1
     key = "door_exterior_security" if ext else "door_interior_wood"
     add_line(d, "(exterior door)" if ext else "(interior door)", 1, "unit", key)
 
 # ---- windows ----
+n_windows = 0
 for w in m.by_type("IfcWindow"):
     ow, oh = w.OverallWidth, w.OverallHeight
     if not ow or not oh:
         skipped.append((w.GlobalId, "IfcWindow", "missing OverallWidth/Height"))
         continue
+    n_windows += 1
     add_line(w, "(glazing)", float(ow) * float(oh), "m2", "window_double_glazed")
 
 # ---- fabric (walls, slabs, roof, footings, beams, members, coverings, stairs, railings) ----
@@ -207,10 +276,15 @@ for r in rows:
         trade_tot[r[7]] += r[6]
 grand = sum(trade_tot.values())
 
+import datetime
+proj = project_name(m) or os.path.splitext(os.path.basename(args.model))[0]
+gfa = compute_floor_area(m)
+today = datetime.date.today().isoformat()
+
 TRADE_ORDER = ["Structure", "Envelope", "Openings", "Finishes", "MEP"]
 lines = []
-lines.append("# Cost Estimate — Duplex Apartment\n")
-lines.append("**Model:** `building/Duplex.ifc` · **Prices:** `data/unit-prices.csv` · **Generated:** 2026-06-11\n")
+lines.append(f"# Cost Estimate — {proj}\n")
+lines.append(f"**Model:** `{args.model}` · **Prices:** `{args.prices}` · **Generated:** {today}\n")
 lines.append("> Quantities are **derived from the 3D geometry** — this model carries no quantity sets. "
              "Volumes come from the geometry engine; per-material volumes split a layered element by its layer "
              "thicknesses; m² items use face/footprint area. Treat as an **order-of-magnitude design estimate**, not a tender BoQ.\n")
@@ -222,7 +296,11 @@ for tr in TRADE_ORDER:
         lines.append(f"| {tr} | {trade_tot[tr]:,.0f} |")
 lines.append(f"| **Grand total** | **{grand:,.0f}** |")
 lines.append("")
-lines.append(f"_Indicative cost per m² of livable area (≈276 m²): **€{grand/276:,.0f}/m²**_\n")
+if gfa > 0:
+    lines.append(f"_Floor area (sum of room areas, excl. roof): **{gfa:,.0f} m²** → "
+                 f"indicative **€{grand/gfa:,.0f}/m²**_\n")
+else:
+    lines.append("_No room areas found in the model, so €/m² is not reported._\n")
 
 lines.append("## Materials in the model with no price (added to nothing — flag for next time)\n")
 if unmapped_seen:
@@ -254,12 +332,23 @@ if skipped:
 lines.append("")
 
 lines.append("## Method notes & assumptions\n")
-lines.append("- **Stud partition walls** cost only their plasterboard faces (per m²); the steel-stud cavity has no price line, so it is flagged above, not silently zeroed.")
-lines.append("- **\"Wood - Flooring\"** mapped to **engineered oak (hardwood, €72/m²)** — the model doesn't say hardwood vs. softwood. Swapping to softwood (€45/m²) or laminate (€28/m²) would lower the Finishes total.")
-lines.append("- **Doors**: 4 hosted in external walls priced as security exterior doors (€1,450); 10 as interior wood (€260).")
-lines.append("- **Windows**: priced as uPVC double-glazed (€420/m²) on glazing area; the model includes some wide assemblies, so window area is on the high side.")
-lines.append("- **Steel beams**: mass = geometry volume × 7,850 kg/m³.")
-lines.append("- Reinforcement steel, MEP, and finishes paint/screed are **not modelled**, so €0 here — a real estimate would carry allowances.")
+lines.append("- **Material names** are matched to the price book by exact name, then by keyword "
+             "(so authoring-tool variants like *Type-X Plasterboard* still map to gypsum board); "
+             "anything unmatched is listed above, not silently zeroed.")
+lines.append("- **Layered walls** are costed by their material layers — the plasterboard faces are priced (per m²) "
+             "even when a steel-stud cavity is the thickest layer, so partitions aren't undercounted.")
+if "hardwood_floor" in used_keys:
+    lines.append("- **Generic wood flooring** is mapped to **engineered oak (hardwood, €72/m²)** — the model doesn't "
+                 "state hardwood vs. softwood. Softwood (€45/m²) or laminate (€28/m²) would lower the Finishes total.")
+if n_ext_doors or n_int_doors:
+    lines.append(f"- **Doors**: {n_ext_doors} hosted in external walls priced as security exterior doors (€1,450); "
+                 f"{n_int_doors} as interior wood (€260).")
+if n_windows:
+    lines.append(f"- **Windows**: {n_windows} priced as uPVC double-glazed (€420/m²) on glazing area "
+                 "(`OverallWidth × OverallHeight`); wide assemblies inflate area.")
+if "structural_steel" in used_keys:
+    lines.append("- **Steel members**: mass = geometry volume × 7,850 kg/m³.")
+lines.append("- Reinforcement, MEP, screeds and paint are **not modelled**, so €0 here — a real estimate carries allowances.")
 
 with open(SUMMARY_MD, "w") as fh:
     fh.write("\n".join(lines) + "\n")
