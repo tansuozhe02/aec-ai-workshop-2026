@@ -11,20 +11,21 @@ data/unit-prices.csv             — our firm's price book (€/unit)
 data/project-requirements.md     — the client's design brief (hard rules + preferences)
 TASKS.md                         — the five things we need from the model (start here)
 docs/ifc-workflows.md            — the firm's playbook: how a pro does each task
+requirements.txt                 — Python deps (ifcopenshell, pandas, lark)
 .claude/skills/                  — empty; we fill this live
 outputs/                         — where the reports land
-viewer/                          — optional self-contained 3D viewer for the model
 ```
 
 `TASKS.md` holds five deliberately **short handoff briefs** — *"we got this file, we need this thing"* — not step-by-step specs. The professional *how* lives once in `docs/ifc-workflows.md`, and Claude applies it. That separation is the point: the brief is the ask, the playbook is the expertise, the skill is the bottled result.
 
 ## How to follow along
 
-1. Click **Code → Codespaces → Create codespace on main**
+1. Click **Code → Codespaces → Create codespace** (on the default branch)
 2. Wait ~60 seconds for the environment to boot
-3. In the terminal: `npm install -g @anthropic-ai/claude-code && claude`
-4. Authenticate with your Anthropic console account
-5. Ask Claude: *"Read `TASKS.md` and do task 0."*
+3. Install the Python deps: `pip install -r requirements.txt`
+4. Install and start Claude Code: `npm install -g @anthropic-ai/claude-code && claude`
+5. Authenticate with your Anthropic console account
+6. Ask Claude: *"Read `TASKS.md` and do task 0."*
 
 When you're happy with the result, ask Claude to **save it as a skill**:
 
