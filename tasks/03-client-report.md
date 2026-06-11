@@ -1,23 +1,9 @@
-# Task 3 — Client Report
+# Task 03 — Summarise it for the client
 
-Generate a 1-page client-facing summary of the Duplex project.
+The client is a property developer — they read numbers, not IFC schemas. They want a **one-page summary** of the Duplex they can skim and make decisions from.
 
-Audience: a developer or property owner who reads numbers, not IFC schemas.
+Pull together what we've already produced (the quality check and the cost estimate in `outputs/`) into a single, on-brand page: the project at a glance, what it costs and where the money is, how much we trust the model, and the few things they really need to know.
 
-## Include
+**Deliverable:** `outputs/03-client-report.html` — one printable page, DataDrivenAEC purple (`#7c3aed`), self-contained.
 
-- **Project at a glance**: name, gross floor area, number of stories, primary structural material
-- **Cost summary**: total + per-trade-group breakdown (read from `outputs/02-cost-breakdown.csv`)
-- **Quality status**: the score from `outputs/01-quality-report.md` plus a one-sentence interpretation ("Model is ready for tender" / "Resolve 3 critical issues before issue" / etc.)
-- **3 things the client should know**: 3 short bullets. Plain English. Examples: "Envelope is 38% of cost — material substitution here has the biggest leverage" or "5 walls have unspecified thickness — affects insulation calc and final cost"
-
-## Style
-
-- One A4 page when printed
-- No IFC jargon (no "IfcWall", no "GUID")
-- Numbers rounded sensibly (€ to nearest 100, areas to nearest m²)
-- HTML output, purple-themed (`#7c3aed`) to match DataDrivenAEC branding
-
-## Output
-
-Write `outputs/03-client-report.html`. Make it self-contained — inline CSS, no external dependencies.
+*Our firm's method for this is in `docs/ifc-workflows.md`.*

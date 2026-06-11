@@ -5,17 +5,21 @@ A 20-minute build along: use Claude Code to turn an IFC model into a quality rep
 ## What's in here
 
 ```
-building/Duplex.ifc              — buildingSMART standard duplex (2.3 MB)
-data/unit-prices.csv             — sample €/unit material prices
-data/project-requirements.md     — client brief (hard rules + preferences)
-tasks/00-explore.md              — PM-friendly model overview (start here)
-tasks/01-quality-check.md        — quality / integrity scan
-tasks/02-cost-estimate.md        — cost rollup using unit prices
-tasks/03-client-report.md        — 1-page client summary (HTML)
-tasks/04-validation.md           — validation against project requirements
+building/Duplex.ifc              — buildingSMART standard duplex (2.3 MB)   ← the model we received
+data/unit-prices.csv             — our firm's price book (€/unit)
+data/project-requirements.md     — the client's design brief (hard rules + preferences)
+tasks/00-explore.md              — brief: get to know the model (start here)
+tasks/01-quality-check.md        — brief: check the model quality
+tasks/02-cost-estimate.md        — brief: estimate the cost
+tasks/03-client-report.md        — brief: summarise it for the client
+tasks/04-validation.md           — brief: validate against the brief
+docs/ifc-workflows.md            — the firm's playbook: how a pro does each task
 .claude/skills/                  — empty; we fill this live
-outputs/                         — Claude writes here
+outputs/                         — where the reports land
+viewer/                          — optional self-contained 3D viewer for the model
 ```
+
+The five `tasks/` files are deliberately **short handoff briefs** — *"we got this file, we need this thing"* — not step-by-step specs. The professional *how* lives once in `docs/ifc-workflows.md`, and Claude applies it. That separation is the point: the brief is the ask, the playbook is the expertise, the skill is the bottled result.
 
 ## How to follow along
 
@@ -23,7 +27,7 @@ outputs/                         — Claude writes here
 2. Wait ~60 seconds for the environment to boot
 3. In the terminal: `npm install -g @anthropic-ai/claude-code && claude`
 4. Authenticate with your Anthropic console account
-5. Ask Claude: *"Read `tasks/01-quality-check.md` and do what it says."*
+5. Ask Claude: *"Read `tasks/00-explore.md` and do what it says."*
 
 When you're happy with the result, ask Claude to **save it as a skill**:
 
