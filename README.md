@@ -5,13 +5,15 @@ A 20-minute build along: use Claude Code to turn an IFC model into a quality rep
 ## What's in here
 
 ```
-building/Duplex.ifc          — buildingSMART standard duplex (2.3 MB)
-data/unit-prices.csv         — sample €/unit material prices
-tasks/01-quality-check.md    — first brief
-tasks/02-cost-estimate.md    — second brief
-tasks/03-client-report.md    — third brief
-.claude/skills/              — empty; we fill this live
-outputs/                     — Claude writes here
+building/Duplex.ifc              — buildingSMART standard duplex (2.3 MB)
+data/unit-prices.csv             — sample €/unit material prices
+data/project-requirements.md     — client brief (hard rules + preferences)
+tasks/01-quality-check.md        — first brief
+tasks/02-cost-estimate.md        — second brief
+tasks/03-client-report.md        — third brief
+tasks/04-validation.md           — fourth brief (read brief, check model)
+.claude/skills/                  — empty; we fill this live
+outputs/                         — Claude writes here
 ```
 
 ## How to follow along
