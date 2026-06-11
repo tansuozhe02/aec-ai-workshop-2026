@@ -23,7 +23,7 @@ The client is a property developer — they read numbers, not IFC schemas. Pull 
 → `outputs/03-client-report.html` (one printable page, DataDrivenAEC purple `#7c3aed`, self-contained)
 
 ### 4. Validate against the brief
-We also have the client's design brief in `data/project-requirements.md`. Before tender, confirm **whether the model meets it.** The brief mixes hard, non-negotiable rules with softer preferences — separate the two: what passes, what fails (with the offending elements), what needs a human to check. Where the model can't prove something, say so — don't fake a pass.
+We also have the client's design brief (see `data/`). Before tender, confirm **whether the model meets it.** The brief mixes hard, non-negotiable rules with softer preferences — separate the two: what passes, what fails (with the offending elements), what needs a human to check. Where the model can't prove something, say so — don't fake a pass.
 → `outputs/04-validation-report.md`
 
 ---
